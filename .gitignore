@@ -1,10 +1,10 @@
 /.gitkeep
-/character_card_v2
+/character_card_v2/*.json
 /character_card_v2.7z.001
 /character_card_v2.7z.002
 /character_card_v2.7z.003
 /character_card_v2.7z.004
-/character_card_v2_lorebooks
+/character_card_v2_lorebooks/*.json
 /character_results
 /chromadb
 /data.json
