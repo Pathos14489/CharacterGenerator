@@ -228,8 +228,13 @@ if __name__ == '__main__':
     args = argparse.ArgumentParser()
     args.add_argument("--server_mode", type=str, default="api", choices=["api", "gradio"])
     args.add_argument("--dedupe_on_startup", action="store_true")
+    args.add_argument("--load_data", action="store_true")
     args = args.parse_args()
     client = OpenAI(api_key="abc123", base_url="http://localhost:8000/v1/")
+    if args.load_data:  
+        load_character_book_data(input_dir_1)
+        load_character_book_data(input_dir_2)
+        load_character_data(input_dir_1)
     if args.dedupe_on_startup:
         # Dedupe
         all_documents = entries.get(include=["documents"])
@@ -339,9 +344,3 @@ if __name__ == '__main__':
             mem_gr_blocks.queue().launch(
                 share=True,
             )
-            
-        
-    
-# load_character_book_data(input_dir_1)
-# load_character_book_data(input_dir_2)
-# load_character_data(input_dir_1)
