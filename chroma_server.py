@@ -516,22 +516,21 @@ if __name__ == '__main__':
     with gr.Blocks() as mem_gr_blocks:
         gr.Label(value="Character Generator Prototype")
         with gr.Tab(label="Search Reference Material") as search_tab:
-            query = gr.Textbox(lines=5, label="Query")
+            query = gr.Textbox(lines=5, label="Prompt")
             n_results = gr.Number(value=3, label="Number of Results")
             only_use_character_data_search = gr.Checkbox(label="Only Use Characters as References")
             search_btn = gr.Button(value="Search")
             search_results = gr.JSON(label="Results")
         with gr.Tab(label="Search Generated Characters") as search_generated_tab:
-            generated_query = gr.Textbox(lines=5, label="Query")
+            generated_query = gr.Textbox(lines=5, label="Prompt")
             n_results_generated = gr.Number(value=3, label="Number of Results")
             only_use_character_data_search_generated = gr.Checkbox(label="Only Use Characters as References")
             search_generated_btn = gr.Button(value="Search")
             search_generated_results = gr.JSON(label="Results")
-        with gr.Tab(label="Generate") as generate_tab:
-            query_generate = gr.Textbox(lines=5, label="Query")
+        with gr.Tab(label="Generate Character") as generate_tab:
+            query_generate = gr.Textbox(lines=5, label="Prompt")
             n_results_generate = gr.Number(value=3, label="Number of References")
             character_count = gr.Number(value=1, label="Number of Characters to Generate")
-            only_use_character_data_generate = gr.Checkbox(label="Only Use Characters as References")
             generate_statted = gr.Checkbox(label="Generate Statted Characters")
             temperature = gr.Slider(value=1.15, label="Temperature", minimum=0.0, maximum=3.0)
             min_p = gr.Slider(value=0.05, label="Min P", minimum=0.0, maximum=1.0)
@@ -539,6 +538,16 @@ if __name__ == '__main__':
             max_tokens = gr.Slider(value=3072, label="Max Tokens", minimum=256, maximum=4096, step=128)
             generate_btn = gr.Button(value="Generate")
             generate_results = gr.JSON(label="Results")
+        with gr.Tab(label="Generate Lorebook Entry") as generate_lorebook_tab:
+            query_generate_lorebook = gr.Textbox(lines=5, label="Prompt")
+            n_results_generate_lorebook = gr.Number(value=3, label="Number of References")
+            entry_count = gr.Number(value=1, label="Number of Entries to Generate")
+            temperature_lorebook = gr.Slider(value=1.15, label="Temperature", minimum=0.0, maximum=3.0)
+            min_p_lorebook = gr.Slider(value=0.05, label="Min P", minimum=0.0, maximum=1.0)
+            top_p_lorebook = gr.Slider(value=1.0, label="Top P", minimum=0.0, maximum=1.0)
+            max_tokens_lorebook = gr.Slider(value=3072, label="Max Tokens", minimum=256, maximum=4096, step=128)
+            generate_lorebook_btn = gr.Button(value="Generate")
+            generate_lorebook_results = gr.JSON(label="Results")
         with gr.Tab(label="Delete Entry") as delete_tab:
             entry_id = gr.Textbox(label="Entry ID")
             delete_btn = gr.Button(value="Delete Entry")
@@ -565,15 +574,10 @@ if __name__ == '__main__':
                     }
                 }
             return generated_character_search([query], n_results, where)
-        def gr_generate(query, n_results, character_count, max_tokens, only_use_character_data_generate, generate_statted, temperature, min_p, top_p):
-            where = None
-            if only_use_character_data_generate:
-                where = {
-                    "first_msg":{
-                        "$ne":""
-                    }
-                }
-            return generate_character(query, n_results, character_count, where, generate_statted, temperature, min_p, top_p, max_tokens)
+        def gr_generate_character(query, n_results, character_count, max_tokens, generate_statted, temperature, min_p, top_p):
+            return generate_character(query, n_results, character_count, None, generate_statted, temperature, min_p, top_p, max_tokens)
+        def gr_generate_lorebook_entry(query, n_results, entry_count, max_tokens, temperature, min_p, top_p):
+            return generate_lorebook_entry(query, n_results, entry_count, None, temperature, min_p, top_p, max_tokens)
         def gr_delete_entry(entry_id):
             entries.delete(ids=[entry_id])
             return {
@@ -588,7 +592,8 @@ if __name__ == '__main__':
         delete_btn.click(delete_generated_character, [entry_id], outputs=delete_results)
         search_btn.click(gr_search, [query, n_results, only_use_character_data_search], outputs=search_results)
         search_generated_btn.click(search_generated, [generated_query, n_results_generated, only_use_character_data_search_generated], outputs=search_generated_results)
-        generate_btn.click(gr_generate, [query_generate, n_results_generate, character_count, max_tokens, only_use_character_data_generate, generate_statted, temperature, min_p, top_p], outputs=generate_results)
+        generate_btn.click(gr_generate_character, [query_generate, n_results_generate, character_count, max_tokens, generate_statted, temperature, min_p, top_p], outputs=generate_results)
+        generate_lorebook_btn.click(gr_generate_lorebook_entry, [query_generate_lorebook, n_results_generate_lorebook, entry_count, max_tokens_lorebook, temperature_lorebook, min_p_lorebook, top_p_lorebook], outputs=generate_lorebook_results)
             
     print("Starting FastAPI server...")
     app_thread = threading.Thread(target=uvicorn.run, args=(app,), kwargs={
