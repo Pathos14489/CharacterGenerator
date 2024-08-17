@@ -254,10 +254,19 @@ def generate_character(query, n_results, character_count, where=None, generate_s
         }
     ]
     for result in results:
-        messages.append({
-            "role": "system",
-            "content": f"Name: {result['name']}\nDescription: {result['description']}\nPersonality: {result['personality']}\nTags: {', '.join(result['tags'])}\nFirst Message: {result['first_msg']}"
-        })
+        try:
+            messages.append({
+                "role": "system",
+                "content": f"Name: {result['name']}\nDescription: {result['description']}\nPersonality: {result['personality']}\nTags: {', '.join(result['tags'])}\nFirst Message: {result['first_msg']}\nScenario: {result['scenario']}\nCreator Notes: {result['creator_notes']}"
+            })
+        except:
+            try:
+                messages.append({
+                    "role": "system",
+                    "content": f"Name: {result['name']}\nDescription: {result['content']}\nTags: {', '.join(result['tags'])}"
+                })
+            except:
+                print("Error processing result:", result)
     messages.append({
         "role": "user",
         "content": f"I want a character card made that matches the following description: {query.strip()}",
@@ -471,11 +480,11 @@ if __name__ == '__main__':
         n_results = req.get("n_results", 3)
         print("Getting relevant references...")
         n_results = req.get("n_results", 3)
-        where = req.get("where", {
-            "first_msg":{
-                "$ne":""
-            }
-        })
+        where = req.get("where", None) # {
+        #     "first_msg":{
+        #         "$ne":""
+        #     }
+        # }
         temperature = req.get("temperature", 1.15)
         min_p = req.get("min_p", 0.05)
         top_p = req.get("top_p", 1.0)
