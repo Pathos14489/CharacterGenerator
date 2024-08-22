@@ -771,6 +771,8 @@ if __name__ == '__main__':
     args.add_argument("--api_port", type=int, default=8024)
     args.add_argument("--gradio_hostname", type=str, default="localhost")
     args.add_argument("--gradio_port", type=int, default=8025)
+    args.add_argument("--allow_searching_generated_characters", action="store_true")
+    args.add_argument("--allow_deleting_entries", action="store_true")
     args = args.parse_args()
     client = OpenAI(api_key="abc123", base_url="http://localhost:8000/v1/")
     if args.load_data:  
@@ -894,12 +896,13 @@ if __name__ == '__main__':
             only_use_character_data_search = gr.Checkbox(label="Only Use Characters as References")
             search_btn = gr.Button(value="Search")
             search_results = gr.JSON(label="Results")
-        # with gr.Tab(label="Search Generated Characters") as search_generated_tab:
-        #     generated_query = gr.Textbox(lines=5, label="Prompt")
-        #     n_results_generated = gr.Number(value=3, label="Number of Results")
-        #     only_use_character_data_search_generated = gr.Checkbox(label="Only Use Characters as References")
-        #     search_generated_btn = gr.Button(value="Search")
-        #     search_generated_results = gr.JSON(label="Results")
+        if args.allow_searching_generated_characters:
+            with gr.Tab(label="Search Generated Characters") as search_generated_tab:
+                generated_query = gr.Textbox(lines=5, label="Prompt")
+                n_results_generated = gr.Number(value=3, label="Number of Results")
+                only_use_character_data_search_generated = gr.Checkbox(label="Only Use Characters as References")
+                search_generated_btn = gr.Button(value="Search")
+                search_generated_results = gr.JSON(label="Results")
         with gr.Tab(label="Generate Character") as generate_tab:
             query_generate = gr.Textbox(lines=5, label="Prompt")
             n_results_generate = gr.Number(value=3, label="Number of References")
@@ -923,14 +926,11 @@ if __name__ == '__main__':
             max_tokens_lorebook = gr.Slider(value=3072, label="Max Tokens", minimum=256, maximum=4096, step=128)
             generate_lorebook_btn = gr.Button(value="Generate")
             generate_lorebook_results = gr.JSON(label="Results")
-        with gr.Tab(label="Delete Entry") as delete_tab:
-            entry_id = gr.Textbox(label="Entry ID")
-            delete_btn = gr.Button(value="Delete Entry")
-            delete_results = gr.JSON(label="Results")
-        # with gr.Tab(label="Delete Generated Character") as delete_generated_tab:
-        #     entry_id = gr.Textbox(label="Entry ID")
-        #     delete_btn = gr.Button(value="Delete Entry")
-        #     delete_results = gr.JSON(label="Results")
+        if args.allow_deleting_entries:
+            with gr.Tab(label="Delete Entry") as delete_tab:
+                entry_id = gr.Textbox(label="Entry ID")
+                delete_entry_btn = gr.Button(value="Delete Entry")
+                delete_results = gr.JSON(label="Results")
         def gr_search(query, n_results, only_use_character_data_search):
             where = None
             if only_use_character_data_search:
@@ -968,18 +968,19 @@ if __name__ == '__main__':
             return {
                 "success": True,
             }
-        # def delete_generated_character(entry_id):
-        #     generated_characters.delete(ids=[entry_id])
-        #     return {
-            #     "success": True,
-            # }
+        def delete_generated_character(entry_id):
+            generated_characters.delete(ids=[entry_id])
+            return {
+                "success": True,
+            }
         def download_results(results):
             with open('results.json', 'w') as f:
                 json.dump(results, f, indent=2)
-        delete_btn.click(gr_delete_entry, [entry_id], outputs=delete_results)
-        # delete_btn.click(delete_generated_character, [entry_id], outputs=delete_results)
+        if args.allow_deleting_entries:
+            delete_entry_btn.click(gr_delete_entry, [entry_id], outputs=delete_results)
         search_btn.click(gr_search, [query, n_results, only_use_character_data_search], outputs=search_results)
-        # search_generated_btn.click(search_generated, [generated_query, n_results_generated, only_use_character_data_search_generated], outputs=search_generated_results)
+        if args.allow_searching_generated_characters:
+            search_generated_btn.click(search_generated, [generated_query, n_results_generated, only_use_character_data_search_generated], outputs=search_generated_results)
         generate_btn.click(gr_generate_character, [query_generate, n_results_generate, character_count, max_tokens, generate_type, temperature, min_p, top_p], outputs=[generate_results, schema_description])
         generate_lorebook_btn.click(gr_generate_lorebook_entry, [query_generate_lorebook, n_results_generate_lorebook, entry_count, max_tokens_lorebook, temperature_lorebook, min_p_lorebook, top_p_lorebook], outputs=generate_lorebook_results)
         download_btn.click(download_results, [generate_results])
