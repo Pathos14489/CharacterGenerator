@@ -51,7 +51,7 @@ class CharacterV3(BaseModel):
     full_name: str
     nick_name: str
     age: int
-    gender: str = Field(...,examples=["Male","Female"])
+    gender: str = Field(...,examples=["Male","Female"],pattern="^(Male|Female)$")
     race: str
     species: str
     personality_description: str
@@ -112,7 +112,7 @@ class PantellaCharacter(BaseModel):
     backstory: str = Field(...,description="A description of the character's backstory. Should be at least a paragraph long.")
     current_scenario: str = Field(...,description="A description of what the character is currently doing. Should be at least a sentence long.")
     race: str = Field(...,examples=["Argonian","Breton","Dark Elf","High Elf","Imperial","Khajiit","Nord","Orc","Redguard","Wood Elf"],pattern="^(Argonian|Breton|Dark Elf|High Elf|Imperial|Khajiit|Nord|Orc|Redguard|Wood Elf)$")
-    species: str = Field(...,examples=["Human","Mer","Argonian","Daedra", "Divine", "Dragon", "Goblin", "Atronach"])
+    species: str = Field(...,examples=["Human","Mer","Argonian","Daedra", "Divine", "Dragon", "Goblin", "Atronach"], pattern="^(Human|Mer|Argonian|Daedra|Divine|Dragon|Goblin|Atronach)$")
     lang_override: str = Field(...,description="The language/accent to use for the voice lines.",examples=["en","es","fr","de","it","ja","ko","pl","pt","ru","zh"],pattern="^(en|es|fr|de|it|ja|ko|pl|pt|ru|zh)$")
     creator_notes: str = Field(...,description="Any notes about the character from the writer.")
 
@@ -191,19 +191,19 @@ Wimp 	X is weak and cowardly. Even a little pain will immobilize them.
     backstory: str
     appearance_description: str
     personality_description: str
-    traits: list[str]
-    shooting: int = Field(..., ge=0, le=20)
-    melee: int = Field(..., ge=0, le=20)
-    construction: int = Field(..., ge=0, le=20)
-    mining: int = Field(..., ge=0, le=20)
-    cooking: int = Field(..., ge=0, le=20)
-    plants: int = Field(..., ge=0, le=20)
-    animals: int = Field(..., ge=0, le=20)
-    crafting: int = Field(..., ge=0, le=20)
-    artistic: int = Field(..., ge=0, le=20)
-    medical: int = Field(..., ge=0, le=20)
-    social: int = Field(..., ge=0, le=20)
-    intellectual: int = Field(..., ge=0, le=20)
+    traits: list[str] = Field(...,description="A list of traits that the character has. Should be at least one item long.", examples=["Abrasive","Annoying Voice","Ascetic","Asexual","Beautiful","Bisexual","Bloodlust","Body Modder","Body Purist","Brawler","Cannibal","Careful Shooter","Chemical Fascination","Chemical Interest","Creepy Breathing","Depressive","Fast Learner","Fast Walker","Gay","Gourmand","Great Memory","Greedy","Hard Worker","Industrious","Iron-Willed","Jealous","Jogger","Kind","Lazy","Masochist","Misandrist","Misogynist","Nervous","Neurotic","Night Owl","Nimble","Nudist","Optimist","Pessimist","Pretty","Psychically Deaf","Psychically Dull","Psychically Hypersensitive","Psychically Sensitive","Psychopath","Pyromaniac","Quick Sleeper","Sanguine","Sickly","Slothful","Slow Learner","Slowpoke","Staggeringly Ugly","Steadfast","Super-Immune","Teetotaler","Too Smart","Tortured Artist","Tough","Trigger Happy","Ugly","Undergrounder","Very Neurotic","Volatile","Wimp"], pattern="^(Abrasive|Annoying Voice|Ascetic|Asexual|Beautiful|Bisexual|Bloodlust|Body Modder|Body Purist|Brawler|Cannibal|Careful Shooter|Chemical Fascination|Chemical Interest|Creepy Breathing|Depressive|Fast Learner|Fast Walker|Gay|Gourmand|Great Memory|Greedy|Hard Worker|Industrious|Iron-Willed|Jealous|Jogger|Kind|Lazy|Masochist|Misandrist|Misogynist|Nervous|Neurotic|Night Owl|Nimble|Nudist|Optimist|Pessimist|Pretty|Psychically Deaf|Psychically Dull|Psychically Hypersensitive|Psychically Sensitive|Psychopath|Pyromaniac|Quick Sleeper|Sanguine|Sickly|Slothful|Slow Learner|Slowpoke|Staggeringly Ugly|Steadfast|Super-Immune|Teetotaler|Too Smart|Tortured Artist|Tough|Trigger Happy|Ugly|Undergrounder|Very Neurotic|Volatile|Wimp)$")
+    shooting: int = Field(..., ge=0, le=5)
+    melee: int = Field(..., ge=0, le=5)
+    construction: int = Field(..., ge=0, le=5)
+    mining: int = Field(..., ge=0, le=5)
+    cooking: int = Field(..., ge=0, le=5)
+    plants: int = Field(..., ge=0, le=5)
+    animals: int = Field(..., ge=0, le=5)
+    crafting: int = Field(..., ge=0, le=5)
+    artistic: int = Field(..., ge=0, le=5)
+    medical: int = Field(..., ge=0, le=5)
+    social: int = Field(..., ge=0, le=5)
+    intellectual: int = Field(..., ge=0, le=5)
 
 class ScenarioCharacter(BaseModel):
     """Scenario Character Schema - Not a character but a situation/scenario."""
