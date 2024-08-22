@@ -11,7 +11,7 @@ from openai import OpenAI
 import llama_cpp
 import json
 from typing import Annotated, List
-from pydantic import BaseModel, Extra, Field
+from pydantic import BaseModel, Extra, Field, conlist
 import uuid
 import uvicorn
 import gradio as gr
@@ -116,6 +116,9 @@ class PantellaCharacter(BaseModel):
     lang_override: str = Field(...,description="The language/accent to use for the voice lines.",examples=["en","es","fr","de","it","ja","ko","pl","pt","ru","zh"],pattern="^(en|es|fr|de|it|ja|ko|pl|pt|ru|zh)$")
     creator_notes: str = Field(...,description="Any notes about the character from the writer.")
 
+
+RimworldTrait = Annotated[str, Field(pattern="^(Abrasive|Annoying Voice|Ascetic|Asexual|Beautiful|Bisexual|Bloodlust|Body Modder|Body Purist|Brawler|Cannibal|Careful Shooter|Chemical Fascination|Chemical Interest|Creepy Breathing|Depressive|Fast Learner|Fast Walker|Gay|Gourmand|Great Memory|Greedy|Hard Worker|Industrious|Iron-Willed|Jealous|Jogger|Kind|Lazy|Masochist|Misandrist|Misogynist|Nervous|Neurotic|Night Owl|Nimble|Nudist|Optimist|Pessimist|Pretty|Psychically Deaf|Psychically Dull|Psychically Hypersensitive|Psychically Sensitive|Psychopath|Pyromaniac|Quick Sleeper|Sanguine|Sickly|Slothful|Slow Learner|Slowpoke|Staggeringly Ugly|Steadfast|Super-Immune|Teetotaler|Too Smart|Tortured Artist|Tough|Trigger Happy|Ugly|Undergrounder|Very Neurotic|Volatile|Wimp)$", description="Trait Description")]
+
 class RimworldCharacter(BaseModel):
     """Rimworld Character Schema - Uses Rimworld Stats, Stats are all 0-20
 Available Traits:
@@ -191,7 +194,7 @@ Wimp 	X is weak and cowardly. Even a little pain will immobilize them.
     backstory: str
     appearance_description: str
     personality_description: str
-    traits: list[str] = Field(...,description="A list of traits that the character has. Should be at least one item long.", examples=["Abrasive","Annoying Voice","Ascetic","Asexual","Beautiful","Bisexual","Bloodlust","Body Modder","Body Purist","Brawler","Cannibal","Careful Shooter","Chemical Fascination","Chemical Interest","Creepy Breathing","Depressive","Fast Learner","Fast Walker","Gay","Gourmand","Great Memory","Greedy","Hard Worker","Industrious","Iron-Willed","Jealous","Jogger","Kind","Lazy","Masochist","Misandrist","Misogynist","Nervous","Neurotic","Night Owl","Nimble","Nudist","Optimist","Pessimist","Pretty","Psychically Deaf","Psychically Dull","Psychically Hypersensitive","Psychically Sensitive","Psychopath","Pyromaniac","Quick Sleeper","Sanguine","Sickly","Slothful","Slow Learner","Slowpoke","Staggeringly Ugly","Steadfast","Super-Immune","Teetotaler","Too Smart","Tortured Artist","Tough","Trigger Happy","Ugly","Undergrounder","Very Neurotic","Volatile","Wimp"], pattern="^(Abrasive|Annoying Voice|Ascetic|Asexual|Beautiful|Bisexual|Bloodlust|Body Modder|Body Purist|Brawler|Cannibal|Careful Shooter|Chemical Fascination|Chemical Interest|Creepy Breathing|Depressive|Fast Learner|Fast Walker|Gay|Gourmand|Great Memory|Greedy|Hard Worker|Industrious|Iron-Willed|Jealous|Jogger|Kind|Lazy|Masochist|Misandrist|Misogynist|Nervous|Neurotic|Night Owl|Nimble|Nudist|Optimist|Pessimist|Pretty|Psychically Deaf|Psychically Dull|Psychically Hypersensitive|Psychically Sensitive|Psychopath|Pyromaniac|Quick Sleeper|Sanguine|Sickly|Slothful|Slow Learner|Slowpoke|Staggeringly Ugly|Steadfast|Super-Immune|Teetotaler|Too Smart|Tortured Artist|Tough|Trigger Happy|Ugly|Undergrounder|Very Neurotic|Volatile|Wimp)$")
+    traits: list[RimworldTrait] = Field(...,description="A list of traits that the character has. Should be at least one item long.",min_items=1,max_items=4)
     shooting: int = Field(..., ge=0, le=5)
     melee: int = Field(..., ge=0, le=5)
     construction: int = Field(..., ge=0, le=5)
@@ -682,12 +685,18 @@ def generate_character(query, n_results, character_count, where=None, generate_t
             for drive in drives:
                 metadata["drive_"+drive] = True
         character_description = ""
-        if generate_type == "SPECIAL" or generate_type == "Skyrim" or generate_type == "Rimworld":
+        if generate_type == "SPECIAL" or generate_type == "Skyrim":
             character_description = character["backstory"]
         elif generate_type == "CharacterV3":
             character_description = character["backstory"] + "\n " + character["current_scenario"] + "\n " + character["personality_description"] + "\n " + character["outfit_description"] + "\n " + character["body_description"] + "\n " + character["bare_chest_description"] + "\n " + character["genital_description"]
         elif generate_type == "Pantella":
             character_description = character["personality_description"] + "\n " + character["backstory"] + "\n " + character["current_scenario"]
+        elif generate_type == "Rimworld":
+            character_description = character["backstory"]
+            if character["appearance_description"].strip() != "":
+                character_description += "\n" + character["appearance_description"]
+            if character["personality_description"].strip() != "":
+                character_description += "\n" + character["personality_description"]
         else:
             character_description = character["description"]
         generated_characters.add(ids=[character["id"]], documents=[character_description], metadatas=[metadata])
