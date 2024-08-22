@@ -18,6 +18,7 @@ import gradio as gr
 import argparse
 input_dir_1 = './character_card_v2/'
 input_dir_2 = './character_card_v2_lorebooks/'
+pantella_input_dir = './pantella_characters/'
 
 chroma_path = f"./chromadb"
 chroma_client = chromadb.PersistentClient(chroma_path,Settings(anonymized_telemetry=False))
@@ -31,9 +32,6 @@ try:
         processed_ids = f.read().splitlines()
 except:
     processed_ids = []
-
-
-
 
 # Character Schemas
 class CharacterV2(BaseModel):
@@ -332,31 +330,30 @@ def load_pantella_character_data(input_dir):
                 continue
             data = json.load(f)
             try:
-                data = data["data"]
-            except:
-                print(f"Error processing {filename} - no data key")
-                continue
-            try:
                 data_id = filename.split('.')[0]
                 ids = []
                 documents = []
                 metadatas = []
-                if "description" not in data or data["description"] is None or data["description"].strip() == "" or data["description"].strip() == "description":
+                if "bio" not in data or data["bio"] is None or data["bio"].strip() == "":
                     continue
                 ids.append(data_id)
-                documents.append(data["description"])
+                documents.append(data["bio"])
+                for key in data:
+                    if data[key] is None:
+                        data[key] = ""
                 metadata = {
-                    # "tags": "|".join(data['tags']),
                     "name": data['name'],
-                    "first_msg": data['first_msg'],
-                    "personality": data['personality'],
-                    "post_history_instructions": data['post_history_instructions'],
-                    "scenario": data['scenario'],
-                    "creator_notes": data['creator_notes'],
-                    "creator": data['creator'],
+                    "bio_url": data['bio_url'],
+                    "voice_model": data['voice_model'],
+                    "skyrim_voice_folder": data['skyrim_voice_folder'],
+                    "lang_override": data['lang_override'],
+                    "is_generic_npc": data['is_generic_npc'],
+                    "race": data["race"],
+                    "species": data["species"],
+                    "ref_id": data["ref_id"],
+                    "base_id": data["base_id"],
+                    "creator_notes": data["notes"],
                 }
-                for tag in data['tags']:
-                    metadata["tag_"+tag] = True
                 metadatas.append(metadata)
                 
                 processed_ids.append(data_id)
@@ -780,6 +777,7 @@ if __name__ == '__main__':
         load_character_book_data(input_dir_1)
         load_character_book_data(input_dir_2)
         load_character_data(input_dir_1)
+        load_pantella_character_data(pantella_input_dir)
     if args.dedupe_on_startup:
         # Dedupe
         all_documents = entries.get(include=["documents"])
