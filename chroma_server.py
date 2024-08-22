@@ -111,9 +111,9 @@ class PantellaCharacter(BaseModel):
     personality_description: str
     backstory: str = Field(...,description="A description of the character's backstory. Should be at least a paragraph long.")
     current_scenario: str = Field(...,description="A description of what the character is currently doing. Should be at least a sentence long.")
-    race: str = Field(...,examples=["Argonian","Breton","Dark Elf","High Elf","Imperial","Khajiit","Nord","Orc","Redguard","Wood Elf"])
+    race: str = Field(...,examples=["Argonian","Breton","Dark Elf","High Elf","Imperial","Khajiit","Nord","Orc","Redguard","Wood Elf"],pattern="^(Argonian|Breton|Dark Elf|High Elf|Imperial|Khajiit|Nord|Orc|Redguard|Wood Elf)$")
     species: str = Field(...,examples=["Human","Mer","Argonian","Daedra", "Divine", "Dragon", "Goblin", "Atronach"])
-    lang_override: str = Field(...,description="The language/accent to use for the voice lines.",examples=["en","es","fr","de","it","ja","ko","pl","pt","ru","zh"])
+    lang_override: str = Field(...,description="The language/accent to use for the voice lines.",examples=["en","es","fr","de","it","ja","ko","pl","pt","ru","zh"],pattern="^(en|es|fr|de|it|ja|ko|pl|pt|ru|zh)$")
     creator_notes: str = Field(...,description="Any notes about the character from the writer.")
 
 class RimworldCharacter(BaseModel):
@@ -477,10 +477,19 @@ def generate_character(query, n_results, character_count, where=None, generate_t
         # print("Key:", key)
         # print("Value:", character_card_schema[key])
         if type(character_card_schema[key]) == dict:
+            if "title" in character_card_schema[key] and character_card_schema[key]["title"] is not None:
+                description_part = character_card_schema[key]["title"] + ": "
+            else:
+                description_part = key + ": "
+            add_to_description = False
             if "description" in character_card_schema[key] and character_card_schema[key]["description"] is not None and "title" in character_card_schema[key] and character_card_schema[key]["title"] is not None:
-                schema_description += "\n" + character_card_schema[key]["title"] + ": " + character_card_schema[key]["description"]
-                if "examples" in character_card_schema[key] and character_card_schema[key]["examples"] is not None:
-                    schema_description += "\nExamples: " + ", ".join(character_card_schema[key]["examples"])
+                description_part += character_card_schema[key]["description"]
+                add_to_description = True
+            if "examples" in character_card_schema[key] and character_card_schema[key]["examples"] is not None:
+                description_part += "\nExamples: " + ", ".join(character_card_schema[key]["examples"])
+                add_to_description = True
+            if add_to_description:
+                schema_description += "\n" + description_part
     print("Using grammar from schema:", json.dumps(character_card_schema, indent=2))
     # grammar = llama_cpp.LlamaGrammar.from_json_schema(json.dumps(character_card_schema))
     messages = [
@@ -540,7 +549,6 @@ def generate_character(query, n_results, character_count, where=None, generate_t
     print("Generated characters...")
     id = str(uuid.uuid4())
     output = {
-        "query": query,
         "characters": [],
         "generation_references": results,
     }
@@ -552,7 +560,7 @@ def generate_character(query, n_results, character_count, where=None, generate_t
             continue
         character["id"] = id + "_character_" + str(idx)
         print("Generated character", idx, "with id:", character["id"])
-        character["query"] = query
+        character["prompt"] = query
         if generate_type == "SPECIAL":
             metadata = {
                 "query": query,
@@ -738,7 +746,6 @@ def generate_lorebook_entry(query, n_results, entry_count, where=None, temperatu
     print("Generated lorebook entries...")
     id = str(uuid.uuid4())
     output = {
-        "query": query,
         "lorebook_entries": lorebook_entries,
         "generation_references": results,
     }
@@ -750,7 +757,7 @@ def generate_lorebook_entry(query, n_results, entry_count, where=None, temperatu
             continue
         lorebook_entry["id"] = id + "_lorebook_entry_" + str(idx)
         print("Generated lorebook entry", idx, "with id:", lorebook_entry["id"])
-        lorebook_entry["query"] = query
+        lorebook_entry["prompt"] = query
         metadata = {
             "query": query,
             "name": lorebook_entry["name"],
